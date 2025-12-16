@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 import "./App.css";
 
+const API_URL = "https://fullstack-todo-app-2-mszv.onrender.com/api/todos";
+
 function App() {
   const [activeTodos, setActiveTodos] = useState([]);
   const [completedTodos, setCompletedTodos] = useState([]);
@@ -8,7 +10,7 @@ function App() {
   const [newDescription, setNewDescription] = useState("");
 
   const fetchTodos = async () => {
-    const res = await fetch("http://localhost:5000/api/todos");
+    const res = await fetch(API_URL);
     const todos = await res.json();
     setActiveTodos(todos.filter((t) => !t.completed));
     setCompletedTodos(todos.filter((t) => t.completed));
@@ -20,11 +22,16 @@ function App() {
 
   const handleAddTodo = async () => {
     if (!newTitle || !newDescription) return;
-    const res = await fetch("http://localhost:5000/api/todos", {
+
+    const res = await fetch(API_URL, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ title: newTitle, description: newDescription }),
+      body: JSON.stringify({
+        title: newTitle,
+        description: newDescription,
+      }),
     });
+
     const todo = await res.json();
     setActiveTodos([...activeTodos, todo]);
     setNewTitle("");
@@ -32,7 +39,7 @@ function App() {
   };
 
   const handleComplete = async (id) => {
-    const res = await fetch(`http://localhost:5000/api/todos/${id}`, {
+    const res = await fetch(`${API_URL}/${id}`, {
       method: "PUT",
     });
     const updated = await res.json();
@@ -41,7 +48,7 @@ function App() {
   };
 
   const handleDelete = async (id) => {
-    const res = await fetch(`http://localhost:5000/api/todos/${id}`, {
+    const res = await fetch(`${API_URL}/${id}`, {
       method: "DELETE",
     });
     const todos = await res.json();
@@ -52,37 +59,35 @@ function App() {
   return (
     <div className="App">
       <h1>My Todos</h1>
+
       <div className="todo-wrapper">
         <div className="todo-list-container">
           <h2>Active Todos</h2>
+
           <div className="todo-input">
-            <div className="todo-input-item">
-              <label>Title</label>
-              <input
-                value={newTitle}
-                onChange={(e) => setNewTitle(e.target.value)}
-                placeholder="Task title"
-              />
-            </div>
-            <div className="todo-input-item">
-              <label>Description</label>
-              <input
-                value={newDescription}
-                onChange={(e) => setNewDescription(e.target.value)}
-                placeholder="Task description"
-              />
-            </div>
+            <input
+              placeholder="Title"
+              value={newTitle}
+              onChange={(e) => setNewTitle(e.target.value)}
+            />
+            <input
+              placeholder="Description"
+              value={newDescription}
+              onChange={(e) => setNewDescription(e.target.value)}
+            />
             <button onClick={handleAddTodo}>Add Todo</button>
           </div>
 
           {activeTodos.map((todo) => (
-            <div className="todo-list-item" key={todo._id}>
+            <div key={todo._id} className="todo-list-item">
               <h3>{todo.title}</h3>
               <p>{todo.description}</p>
-              <div className="todo-btns">
-                <button onClick={() => handleComplete(todo._id)}>Complete</button>
-                <button onClick={() => handleDelete(todo._id)}>Delete</button>
-              </div>
+              <button onClick={() => handleComplete(todo._id)}>
+                Complete
+              </button>
+              <button onClick={() => handleDelete(todo._id)}>
+                Delete
+              </button>
             </div>
           ))}
         </div>
@@ -90,15 +95,12 @@ function App() {
         <div className="todo-list-container">
           <h2>Completed Todos</h2>
           {completedTodos.map((todo) => (
-            <div className="todo-list-item completed" key={todo._id}>
+            <div key={todo._id} className="todo-list-item completed">
               <h3>{todo.title}</h3>
               <p>{todo.description}</p>
-              {todo.completedOn && (
-                <p className="completed-date">
-                  Completed on: {new Date(todo.completedOn).toLocaleString()}
-                </p>
-              )}
-              <button onClick={() => handleDelete(todo._id)}>Delete</button>
+              <button onClick={() => handleDelete(todo._id)}>
+                Delete
+              </button>
             </div>
           ))}
         </div>
