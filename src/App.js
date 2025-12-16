@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
 import "./App.css";
 
-const API_URL = "https://fullstack-todo-app-2-mszv.onrender.com/api/todos";
+// Use environment variable if set, otherwise fallback to your deployed backend
+const API_URL = process.env.REACT_APP_API_URL || "https://fullstack-todo-app-2-mszv.onrender.com/api/todos";
 
 function App() {
   const [activeTodos, setActiveTodos] = useState([]);
@@ -10,10 +11,14 @@ function App() {
   const [newDescription, setNewDescription] = useState("");
 
   const fetchTodos = async () => {
-    const res = await fetch(API_URL);
-    const todos = await res.json();
-    setActiveTodos(todos.filter((t) => !t.completed));
-    setCompletedTodos(todos.filter((t) => t.completed));
+    try {
+      const res = await fetch(API_URL);
+      const todos = await res.json();
+      setActiveTodos(todos.filter((t) => !t.completed));
+      setCompletedTodos(todos.filter((t) => t.completed));
+    } catch (err) {
+      console.error("Failed to fetch todos:", err);
+    }
   };
 
   useEffect(() => {
@@ -22,72 +27,77 @@ function App() {
 
   const handleAddTodo = async () => {
     if (!newTitle || !newDescription) return;
-
-    const res = await fetch(API_URL, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        title: newTitle,
-        description: newDescription,
-      }),
-    });
-
-    const todo = await res.json();
-    setActiveTodos([...activeTodos, todo]);
-    setNewTitle("");
-    setNewDescription("");
+    try {
+      const res = await fetch(API_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ title: newTitle, description: newDescription }),
+      });
+      const todo = await res.json();
+      setActiveTodos([...activeTodos, todo]);
+      setNewTitle("");
+      setNewDescription("");
+    } catch (err) {
+      console.error("Failed to add todo:", err);
+    }
   };
 
   const handleComplete = async (id) => {
-    const res = await fetch(`${API_URL}/${id}`, {
-      method: "PUT",
-    });
-    const updated = await res.json();
-    setActiveTodos(activeTodos.filter((t) => t._id !== id));
-    setCompletedTodos([...completedTodos, updated]);
+    try {
+      const res = await fetch(`${API_URL}/${id}`, { method: "PUT" });
+      const updated = await res.json();
+      setActiveTodos(activeTodos.filter((t) => t._id !== id));
+      setCompletedTodos([...completedTodos, updated]);
+    } catch (err) {
+      console.error("Failed to complete todo:", err);
+    }
   };
 
   const handleDelete = async (id) => {
-    const res = await fetch(`${API_URL}/${id}`, {
-      method: "DELETE",
-    });
-    const todos = await res.json();
-    setActiveTodos(todos.filter((t) => !t.completed));
-    setCompletedTodos(todos.filter((t) => t.completed));
+    try {
+      const res = await fetch(`${API_URL}/${id}`, { method: "DELETE" });
+      const todos = await res.json();
+      setActiveTodos(todos.filter((t) => !t.completed));
+      setCompletedTodos(todos.filter((t) => t.completed));
+    } catch (err) {
+      console.error("Failed to delete todo:", err);
+    }
   };
 
   return (
     <div className="App">
       <h1>My Todos</h1>
-
       <div className="todo-wrapper">
         <div className="todo-list-container">
           <h2>Active Todos</h2>
-
           <div className="todo-input">
-            <input
-              placeholder="Title"
-              value={newTitle}
-              onChange={(e) => setNewTitle(e.target.value)}
-            />
-            <input
-              placeholder="Description"
-              value={newDescription}
-              onChange={(e) => setNewDescription(e.target.value)}
-            />
+            <div className="todo-input-item">
+              <label>Title</label>
+              <input
+                value={newTitle}
+                onChange={(e) => setNewTitle(e.target.value)}
+                placeholder="Task title"
+              />
+            </div>
+            <div className="todo-input-item">
+              <label>Description</label>
+              <input
+                value={newDescription}
+                onChange={(e) => setNewDescription(e.target.value)}
+                placeholder="Task description"
+              />
+            </div>
             <button onClick={handleAddTodo}>Add Todo</button>
           </div>
 
           {activeTodos.map((todo) => (
-            <div key={todo._id} className="todo-list-item">
+            <div className="todo-list-item" key={todo._id}>
               <h3>{todo.title}</h3>
               <p>{todo.description}</p>
-              <button onClick={() => handleComplete(todo._id)}>
-                Complete
-              </button>
-              <button onClick={() => handleDelete(todo._id)}>
-                Delete
-              </button>
+              <div className="todo-btns">
+                <button onClick={() => handleComplete(todo._id)}>Complete</button>
+                <button onClick={() => handleDelete(todo._id)}>Delete</button>
+              </div>
             </div>
           ))}
         </div>
@@ -95,12 +105,15 @@ function App() {
         <div className="todo-list-container">
           <h2>Completed Todos</h2>
           {completedTodos.map((todo) => (
-            <div key={todo._id} className="todo-list-item completed">
+            <div className="todo-list-item completed" key={todo._id}>
               <h3>{todo.title}</h3>
               <p>{todo.description}</p>
-              <button onClick={() => handleDelete(todo._id)}>
-                Delete
-              </button>
+              {todo.completedOn && (
+                <p className="completed-date">
+                  Completed on: {new Date(todo.completedOn).toLocaleString()}
+                </p>
+              )}
+              <button onClick={() => handleDelete(todo._id)}>Delete</button>
             </div>
           ))}
         </div>
