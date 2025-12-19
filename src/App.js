@@ -1,8 +1,9 @@
 import { useState, useEffect } from "react";
 import "./App.css";
 
-// Use environment variable if set, otherwise fallback to your deployed backend
-const API_URL = process.env.REACT_APP_API_URL || "https://fullstack-todo-app-2-mszv.onrender.com/api/todos";
+const API_URL =
+  process.env.REACT_APP_API_URL ||
+  "https://fullstack-todo-app-2-mszv.onrender.com/api/todos";
 
 function App() {
   const [activeTodos, setActiveTodos] = useState([]);
