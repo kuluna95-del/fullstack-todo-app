@@ -1,31 +1,39 @@
-// src/pages/TodoApp.js
 import { useState, useEffect } from "react";
 import { AiOutlineDelete } from "react-icons/ai";
 import { BsCheckLg } from "react-icons/bs";
+import "./TodoApp.css";
 
 function TodoApp({ token, logout }) {
   const [allTodos, setTodos] = useState([]);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
-  const [isCompleteScreen, setIsCompleteScreen] = useState(false);
+  const [filter, setFilter] = useState("active"); // "active" ou "completed"
 
-  // Fetch todos from backend on mount
+  const API_URL =
+    process.env.REACT_APP_API_URL || "http://localhost:5000/api/todos";
+
+  // Récupérer les tâches
+  const fetchTodos = async () => {
+    try {
+      const res = await fetch(API_URL, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await res.json();
+      setTodos(data);
+    } catch (err) {
+      console.error("Erreur lors du chargement des tâches :", err);
+    }
+  };
+
   useEffect(() => {
-    if (!token) return;
-    fetch("http://localhost:5000/api/todos", {
-      headers: { Authorization: `Bearer ${token}` },
-    })
-      .then((res) => res.json())
-      .then((data) => setTodos(data))
-      .catch((err) => console.error(err));
+    if (token) fetchTodos();
   }, [token]);
 
-  // Add todo
+  // Ajouter une tâche
   const handleAddTodo = async () => {
     if (!title || !description) return;
-
     try {
-      const res = await fetch("http://localhost:5000/api/todos", {
+      await fetch(API_URL, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -33,130 +41,120 @@ function TodoApp({ token, logout }) {
         },
         body: JSON.stringify({ title, description }),
       });
-
-      const data = await res.json();
-      setTodos(data); // backend should return updated list
       setTitle("");
       setDescription("");
+      fetchTodos();
     } catch (err) {
-      console.error("Error adding todo:", err);
+      console.error("Erreur lors de l’ajout de la tâche :", err);
     }
   };
 
-  // Delete todo
+  // Marquer une tâche comme terminée
+  const handleComplete = async (id) => {
+    try {
+      await fetch(`${API_URL}/${id}`, {
+        method: "PUT",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      fetchTodos();
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  // Supprimer une tâche
   const handleDelete = async (id) => {
     try {
-      const res = await fetch(`http://localhost:5000/api/todos/${id}`, {
+      await fetch(`${API_URL}/${id}`, {
         method: "DELETE",
         headers: { Authorization: `Bearer ${token}` },
       });
-      const data = await res.json();
-      setTodos(data);
+      fetchTodos();
     } catch (err) {
       console.error(err);
     }
   };
 
-  // Toggle complete
-  const handleComplete = async (id) => {
-    try {
-      const res = await fetch(`http://localhost:5000/api/todos/${id}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ completed: true }),
-      });
-      const data = await res.json();
-      setTodos(data);
-    } catch (err) {
-      console.error(err);
-    }
-  };
+  // Filtrer les tâches
+  const displayedTodos =
+    filter === "active"
+      ? allTodos.filter((t) => !t.completed)
+      : allTodos.filter((t) => t.completed);
 
   return (
     <div className="App">
-      <h1>My Todos</h1>
-
-      <button onClick={logout} style={{ marginBottom: "20px" }}>
-        Logout
-      </button>
-
-      <div>
-        <button onClick={() => setIsCompleteScreen(false)}>Active</button>
-        <button onClick={() => setIsCompleteScreen(true)}>Completed</button>
+      <div className="header">
+        <h1>Mes tâches</h1>
+        <button onClick={logout}>Déconnexion</button>
       </div>
 
+      <div className="filter-buttons">
+        <button
+          className={filter === "active" ? "active" : ""}
+          onClick={() => setFilter("active")}
+        >
+          Actives
+        </button>
+        <button
+          className={filter === "completed" ? "active" : ""}
+          onClick={() => setFilter("completed")}
+        >
+          Terminées
+        </button>
+      </div>
+
+      {filter === "active" && (
+        <div className="todo-input">
+          <input
+            placeholder="Titre"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+          />
+          <input
+            placeholder="Description"
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+          />
+          <button onClick={handleAddTodo}>Ajouter une tâche</button>
+        </div>
+      )}
+
       <div className="todo-wrapper">
-        {!isCompleteScreen && (
-          <>
-            {/* Add Todo */}
-            <div className="todo-input">
-              <div>
-                <label>Title</label>
-                <input
-                  type="text"
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
-                />
-              </div>
+        {displayedTodos.map((todo) => (
+          <div
+            className={`todo-list-item ${
+              todo.completed ? "completed" : ""
+            }`}
+            key={todo._id}
+          >
+            <h3>{todo.title}</h3>
+            <p>{todo.description}</p>
 
-              <div>
-                <label>Description</label>
-                <input
-                  type="text"
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                />
-              </div>
+            {todo.completed && todo.completedOn && (
+              <p className="completed-date">
+                Terminée le :{" "}
+                {new Date(todo.completedOn).toLocaleString()}
+              </p>
+            )}
 
-              <button onClick={handleAddTodo}>Add Todo</button>
+            <div className="todo-btns">
+              {!todo.completed && (
+                <button
+                  className="complete"
+                  onClick={() => handleComplete(todo._id)}
+                >
+                  <BsCheckLg />
+                </button>
+              )}
+              <button
+                className="delete"
+                onClick={() => handleDelete(todo._id)}
+              >
+                <AiOutlineDelete />
+              </button>
             </div>
-
-            {/* Active Todos */}
-            <div className="todo-list">
-              {allTodos
-                .filter((t) => !t.completed)
-                .map((item) => (
-                  <div className="todo-list-item" key={item._id}>
-                    <h3>{item.title}</h3>
-                    <p>{item.description}</p>
-                    <AiOutlineDelete
-                      className="icon"
-                      onClick={() => handleDelete(item._id)}
-                    />
-                    <BsCheckLg
-                      className="check-icon"
-                      onClick={() => handleComplete(item._id)}
-                    />
-                  </div>
-                ))}
-            </div>
-          </>
-        )}
-
-        {isCompleteScreen && (
-          <div className="todo-list">
-            {allTodos
-              .filter((t) => t.completed)
-              .map((item) => (
-                <div className="todo-list-item completed" key={item._id}>
-                  <h3>{item.title}</h3>
-                  <p>{item.description}</p>
-                  <p>
-                    <small>
-                      Completed on: {new Date(item.completedOn).toLocaleString()}
-                    </small>
-                  </p>
-                  <AiOutlineDelete
-                    className="icon"
-                    onClick={() => handleDelete(item._id)}
-                  />
-                </div>
-              ))}
           </div>
-        )}
+        ))}
       </div>
     </div>
   );

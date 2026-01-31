@@ -1,22 +1,33 @@
 const express = require("express");
 const router = express.Router();
 const Todo = require("../models/Todo");
+const auth = require("../middleware/auth");
 
-// Get all todos
-router.get("/", async (req, res) => {
+// =========================
+// GET all todos (USER ONLY)
+// =========================
+router.get("/", auth, async (req, res) => {
   try {
-    const todos = await Todo.find();
+    const todos = await Todo.find({ user: req.userId });
     res.json(todos);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
 
-// Add a new todo
-router.post("/", async (req, res) => {
+// =========================
+// ADD new todo
+// =========================
+router.post("/", auth, async (req, res) => {
   try {
     const { title, description } = req.body;
-    const newTodo = new Todo({ title, description });
+
+    const newTodo = new Todo({
+      title,
+      description,
+      user: req.userId
+    });
+
     const saved = await newTodo.save();
     res.json(saved);
   } catch (err) {
@@ -24,25 +35,34 @@ router.post("/", async (req, res) => {
   }
 });
 
-// Mark todo as completed
-router.put("/:id", async (req, res) => {
+// =========================
+// MARK todo as completed
+// =========================
+router.put("/:id", auth, async (req, res) => {
   try {
-    const updated = await Todo.findByIdAndUpdate(
-      req.params.id,
+    const updated = await Todo.findOneAndUpdate(
+      { _id: req.params.id, user: req.userId },
       { completed: true, completedOn: new Date() },
       { new: true }
     );
+
     res.json(updated);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
 
-// Delete todo
-router.delete("/:id", async (req, res) => {
+// =========================
+// DELETE todo
+// =========================
+router.delete("/:id", auth, async (req, res) => {
   try {
-    await Todo.findByIdAndDelete(req.params.id);
-    const todos = await Todo.find();
+    await Todo.findOneAndDelete({
+      _id: req.params.id,
+      user: req.userId
+    });
+
+    const todos = await Todo.find({ user: req.userId });
     res.json(todos);
   } catch (err) {
     res.status(500).json({ error: err.message });

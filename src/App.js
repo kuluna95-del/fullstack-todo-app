@@ -1,125 +1,46 @@
-import { useState, useEffect } from "react";
-import "./App.css";
+import { Routes, Route, Navigate } from "react-router-dom";
+import Login from "./pages/Login";
+import Register from "./pages/Register";
+import TodoApp from "./pages/TodoApp";
+import { useState } from "react";
+import './App.css'; // ou './index.css' selon où tu as mis le CSS
 
-const API_URL =
-  process.env.REACT_APP_API_URL ||
-  "https://fullstack-todo-app-2-mszv.onrender.com/api/todos";
 
 function App() {
-  const [activeTodos, setActiveTodos] = useState([]);
-  const [completedTodos, setCompletedTodos] = useState([]);
-  const [newTitle, setNewTitle] = useState("");
-  const [newDescription, setNewDescription] = useState("");
+  // ✅ token persistant
+  const [token, setToken] = useState(() => localStorage.getItem("token"));
 
-  const fetchTodos = async () => {
-    try {
-      const res = await fetch(API_URL);
-      const todos = await res.json();
-      setActiveTodos(todos.filter((t) => !t.completed));
-      setCompletedTodos(todos.filter((t) => t.completed));
-    } catch (err) {
-      console.error("Failed to fetch todos:", err);
-    }
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    setToken(null);
   };
 
-  useEffect(() => {
-    fetchTodos();
-  }, []);
-
-  const handleAddTodo = async () => {
-    if (!newTitle || !newDescription) return;
-    try {
-      const res = await fetch(API_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ title: newTitle, description: newDescription }),
-      });
-      const todo = await res.json();
-      setActiveTodos([...activeTodos, todo]);
-      setNewTitle("");
-      setNewDescription("");
-    } catch (err) {
-      console.error("Failed to add todo:", err);
-    }
-  };
-
-  const handleComplete = async (id) => {
-    try {
-      const res = await fetch(`${API_URL}/${id}`, { method: "PUT" });
-      const updated = await res.json();
-      setActiveTodos(activeTodos.filter((t) => t._id !== id));
-      setCompletedTodos([...completedTodos, updated]);
-    } catch (err) {
-      console.error("Failed to complete todo:", err);
-    }
-  };
-
-  const handleDelete = async (id) => {
-    try {
-      const res = await fetch(`${API_URL}/${id}`, { method: "DELETE" });
-      const todos = await res.json();
-      setActiveTodos(todos.filter((t) => !t.completed));
-      setCompletedTodos(todos.filter((t) => t.completed));
-    } catch (err) {
-      console.error("Failed to delete todo:", err);
-    }
+  const ProtectedRoute = ({ children }) => {
+    if (!token) return <Navigate to="/login" />;
+    return children;
   };
 
   return (
-    <div className="App">
-      <h1>My Todos</h1>
-      <div className="todo-wrapper">
-        <div className="todo-list-container">
-          <h2>Active Todos</h2>
-          <div className="todo-input">
-            <div className="todo-input-item">
-              <label>Title</label>
-              <input
-                value={newTitle}
-                onChange={(e) => setNewTitle(e.target.value)}
-                placeholder="Task title"
-              />
-            </div>
-            <div className="todo-input-item">
-              <label>Description</label>
-              <input
-                value={newDescription}
-                onChange={(e) => setNewDescription(e.target.value)}
-                placeholder="Task description"
-              />
-            </div>
-            <button onClick={handleAddTodo}>Add Todo</button>
-          </div>
+    <Routes>
+      <Route
+        path="/"
+        element={
+          <ProtectedRoute>
+            <TodoApp token={token} logout={handleLogout} />
+          </ProtectedRoute>
+        }
+      />
 
-          {activeTodos.map((todo) => (
-            <div className="todo-list-item" key={todo._id}>
-              <h3>{todo.title}</h3>
-              <p>{todo.description}</p>
-              <div className="todo-btns">
-                <button onClick={() => handleComplete(todo._id)}>Complete</button>
-                <button onClick={() => handleDelete(todo._id)}>Delete</button>
-              </div>
-            </div>
-          ))}
-        </div>
+      <Route
+        path="/login"
+        element={<Login setToken={setToken} />}
+      />
 
-        <div className="todo-list-container">
-          <h2>Completed Todos</h2>
-          {completedTodos.map((todo) => (
-            <div className="todo-list-item completed" key={todo._id}>
-              <h3>{todo.title}</h3>
-              <p>{todo.description}</p>
-              {todo.completedOn && (
-                <p className="completed-date">
-                  Completed on: {new Date(todo.completedOn).toLocaleString()}
-                </p>
-              )}
-              <button onClick={() => handleDelete(todo._id)}>Delete</button>
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
+      <Route
+        path="/register"
+        element={<Register />}
+      />
+    </Routes>
   );
 }
 
