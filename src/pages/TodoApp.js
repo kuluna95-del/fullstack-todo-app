@@ -12,7 +12,7 @@ function TodoApp({ token, logout }) {
   const API_URL =
     process.env.REACT_APP_API_URL || "http://localhost:5000/api/todos";
 
-  // Fetch todos wrapped in useCallback to avoid ESLint warning
+  // Récupérer les todos, useCallback pour ESLint
   const fetchTodos = useCallback(async () => {
     if (!token) return;
     try {
@@ -22,16 +22,16 @@ function TodoApp({ token, logout }) {
       const data = await res.json();
       setTodos(data);
     } catch (err) {
-      console.error("Error fetching todos:", err);
+      console.error("Erreur lors de la récupération des todos :", err);
     }
   }, [API_URL, token]);
 
-  // Fetch todos on mount and when token changes
+  // Récupérer les todos au montage et quand le token change
   useEffect(() => {
     fetchTodos();
   }, [fetchTodos]);
 
-  // Add todo
+  // Ajouter un todo
   const handleAddTodo = async () => {
     if (!title || !description) return;
     try {
@@ -47,11 +47,11 @@ function TodoApp({ token, logout }) {
       setDescription("");
       fetchTodos();
     } catch (err) {
-      console.error("Error adding todo:", err);
+      console.error("Erreur lors de l'ajout du todo :", err);
     }
   };
 
-  // Complete todo
+  // Marquer comme terminé
   const handleComplete = async (id) => {
     try {
       await fetch(`${API_URL}/${id}`, {
@@ -64,7 +64,7 @@ function TodoApp({ token, logout }) {
     }
   };
 
-  // Delete todo
+  // Supprimer un todo
   const handleDelete = async (id) => {
     try {
       await fetch(`${API_URL}/${id}`, {
@@ -77,7 +77,7 @@ function TodoApp({ token, logout }) {
     }
   };
 
-  // Filter todos
+  // Filtrer les todos
   const displayedTodos =
     filter === "active"
       ? allTodos.filter((t) => !t.completed)
@@ -86,8 +86,8 @@ function TodoApp({ token, logout }) {
   return (
     <div className="App">
       <div className="header">
-        <h1>My Todos</h1>
-        <button onClick={logout}>Logout</button>
+        <h1>Mes Todos</h1>
+        <button onClick={logout}>Se déconnecter</button>
       </div>
 
       <div className="filter-buttons">
@@ -95,20 +95,20 @@ function TodoApp({ token, logout }) {
           className={filter === "active" ? "active" : ""}
           onClick={() => setFilter("active")}
         >
-          Active
+          Actifs
         </button>
         <button
           className={filter === "completed" ? "active" : ""}
           onClick={() => setFilter("completed")}
         >
-          Completed
+          Terminés
         </button>
       </div>
 
       {filter === "active" && (
         <div className="todo-input">
           <input
-            placeholder="Title"
+            placeholder="Titre"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
           />
@@ -117,7 +117,7 @@ function TodoApp({ token, logout }) {
             value={description}
             onChange={(e) => setDescription(e.target.value)}
           />
-          <button onClick={handleAddTodo}>Add Todo</button>
+          <button onClick={handleAddTodo}>Ajouter Todo</button>
         </div>
       )}
 
@@ -131,7 +131,7 @@ function TodoApp({ token, logout }) {
             <p>{todo.description}</p>
             {todo.completed && todo.completedOn && (
               <p className="completed-date">
-                Completed on: {new Date(todo.completedOn).toLocaleString()}
+                Terminé le : {new Date(todo.completedOn).toLocaleString()}
               </p>
             )}
 
