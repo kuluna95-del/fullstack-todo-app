@@ -3,8 +3,7 @@
 A full-stack Todo application allowing users to create, complete, and delete tasks with persistent storage.
 
 ## 🌐 Live Demo
-👉 Frontend: https://YOUR-TODO-VERCEL-LINK.vercel.app  
-👉 Backend API: https://YOUR-TODO-RENDER-LINK.onrender.com
+👉 https://fullstack-todo-eyegu99td-steves-projects-fd8cfd5b.vercel.app/login
 
 ## 📂 Repository
 👉 https://github.com/kuluna95-del/fullstack-todo-app
