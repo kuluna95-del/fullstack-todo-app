@@ -21,25 +21,25 @@ export default function Register() {
       const data = await res.json();
 
       if (!res.ok) {
-        alert(data.message || "Échec de l’inscription");
+        alert(data.message || "Registration failed");
         return;
       }
 
-      alert("Compte créé avec succès");
+      alert("Account created successfully");
       navigate("/login");
     } catch (err) {
-      alert("Erreur du serveur");
+      alert("Server error");
     }
   };
 
   return (
     <div className="auth-container">
       <form onSubmit={handleSubmit} className="auth-box">
-        <h2>Inscription</h2>
+        <h2>Register</h2>
 
         <input
           type="email"
-          placeholder="Adresse e-mail"
+          placeholder="Email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           required
@@ -47,16 +47,16 @@ export default function Register() {
 
         <input
           type="password"
-          placeholder="Mot de passe"
+          placeholder="Password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           required
         />
 
-        <button type="submit">S’inscrire</button>
+        <button type="submit">Register</button>
 
         <p>
-          Déjà un compte ? <Link to="/login">Se connecter</Link>
+          Already have an account? <Link to="/login">Login</Link>
         </p>
       </form>
     </div>

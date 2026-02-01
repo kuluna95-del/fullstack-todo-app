@@ -21,7 +21,7 @@ export default function Login({ setToken }) {
       const data = await res.json();
 
       if (!res.ok) {
-        alert(data.message || "Échec de la connexion");
+        alert(data.message || "Login failed");
         return;
       }
 
@@ -29,18 +29,18 @@ export default function Login({ setToken }) {
       setToken(data.token);
       navigate("/");
     } catch (err) {
-      alert("Erreur du serveur");
+      alert("Server error");
     }
   };
 
   return (
     <div className="auth-container">
       <form onSubmit={handleSubmit} className="auth-box">
-        <h2>Connexion</h2>
+        <h2>Login</h2>
 
         <input
           type="email"
-          placeholder="Adresse e-mail"
+          placeholder="Email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           required
@@ -48,17 +48,16 @@ export default function Login({ setToken }) {
 
         <input
           type="password"
-          placeholder="Mot de passe"
+          placeholder="Password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           required
         />
 
-        <button type="submit">Se connecter</button>
+        <button type="submit">Login</button>
 
         <p>
-          Pas encore de compte ?{" "}
-          <Link to="/register">S’inscrire</Link>
+          No account? <Link to="/register">Register</Link>
         </p>
       </form>
     </div>

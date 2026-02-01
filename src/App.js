@@ -5,6 +5,7 @@ import TodoApp from "./pages/TodoApp";
 import { useState } from "react";
 import './App.css'; // ou './index.css' selon où tu as mis le CSS
 
+// Force rebuild on Vercel
 
 function App() {
   // ✅ token persistant
